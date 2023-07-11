@@ -1,0 +1,135 @@
+CREATE DATABASE MOVIE;
+USE MOVIE;
+
+Create table MOVIES(
+ MOVIE_ID INT primary key, 
+ MOVIE_NAME varchar(50),
+ MOVIE_YEAR int,
+ DIRECTOR_ID int,
+ RELEASE_DATE date,
+ MUSIC_DIRECTOR varchar(50),
+ LANGUAGE VARCHAR(50),
+ GENRE varchar(25));
+ 
+  insert into MOVIES values
+ (100,'The Avengers',2012,200,'2012-04-27','Alan Silvestri','English','Action'),
+ (101,'Avengers: Age of Ultron',2015,201,'2015-04-13','Brian Tyler','English','Action'),
+  (102,'Adipurush',2023,202,'2023-06-16','Sanchit Balhara','Hindi','Drama'),
+   (103,'Bahubali',2015,203,'2015-07-10','M M Keeravani','Telugu','War'),
+    (104,'2018',2023,204,'2023-05-05','Nobin Paul','Malayalam','Survival'),
+     (105,'M.S. Dhoni: The Untold Story',2016,205,'2016-09-30','Sanjoy Chowdhury','Hindi','Drama');
+
+create table DIRECTOR
+(DIRECTOR_ID int primary key,
+DIRECTOR_NAME varchar(50),
+NO_OF_MOVIES int,
+HITS int,
+AWARDS varchar(50));
+
+insert into DIRECTOR values
+(200,'Joe Russo',31,25,'Best Dramatic Presentation'),
+ (201,'Joss Whedon',14,10,'Best Writing'),
+ (203,'S S Rajamouli',12,12,'Nandi Award'),
+ (206,'Rohit Shetty',15,08,'best screenplay');
+ 
+create table REVIEW 
+(MOVIE_ID int primary key,
+RATINGS varchar(6));
+
+insert into REVIEW values
+(100,'*****'),
+(101,'****'),
+(102,'***'),
+(103,'*****'),
+(104,'***'),
+(105,'****');
+
+create table CASTING
+(ARTIST_ID int primary key,
+MOVIE_ID int,
+ROLE varchar(50),
+ARTIST_NAME varchar(50),
+GENDER varchar(10));
+
+insert into CASTING values
+(1001,101,'HERO','CHRIS HEMSWORTH','MALE'),
+(1002,101,'LEAD-ROLE','SCARLETT JOHANSSON','FEMALE'),
+(1003,103,'COMMANDER-IN-CHEIF','SATYARAJ','MALE'),
+(1004,105,'HEROINE','DISHA PATANI','FEMALE');
+
+-- NAME OF THE MOVIES WHOSE DIRECTOR IS S S Rajamouli --
+
+select MOVIE_NAME from MOVIES 
+WHERE DIRECTOR_ID IN 
+(select DIRECTOR_ID from director where director_name='s s rajamouli');
+
+-- RELEASE DATE OF THE MOVIE  --
+
+SELECT RELEASE_DATE FROM MOVIES 
+where MOVIE_NAME = 'The Avengers';
+
+-- UPDATE THE MOVIE RATINGS WHOSE DIRECTOR IS " Joss Whedon "
+
+update REVIEW 
+set RATINGS = '*****'
+where MOVIE_ID in ( select MOVIE_ID from  MOVIES
+where DIRECTOR_ID in (select DIRECTOR_ID from DIRECTOR 
+where DIRECTOR_NAME = 'Joss Whedon'));
+
+-- JOINS BASED ON CASTING AND MOVIE TABLE --
+
+SELECT * 
+FROM MOVIES LEFT JOIN CASTING 
+ON MOVIES.MOVIE_ID = CASTING.MOVIE_ID
+UNION ALL
+SELECT * 
+FROM MOVIES RIGHT JOIN CASTING 
+ON MOVIES.MOVIE_ID = CASTING.MOVIE_ID;
+
+SELECT MOVIE_NAME 
+FROM MOVIES INNER JOIN CASTING 
+ON MOVIES.MOVIE_ID = CASTING.MOVIE_ID;
+
+-- MOVIES IN BETWEEN 2016 TO 2023
+
+SELECT MOVIE_NAME,ARTIST_NAME,MOVIE_YEAR 
+FROM MOVIES,CASTING 
+WHERE MOVIES.MOVIE_ID = CASTING.MOVIE_ID 
+AND MOVIE_YEAR between 2016 AND 2023;
+
+-- MOVIE NAME AND RATING AS PER RATING DESCENDING ORDER -- 
+
+SELECT MOVIE_NAME,RATINGS 
+FROM MOVIES AS M,REVIEW AS R 
+WHERE M.MOVIE_ID = R.MOVIE_ID 
+ORDER BY RATINGS DESC;
+
+-- ADDING NO OF MOVIES BASED ON TRIGGERS --
+
+CREATE TABLE MOVIE_DIRECTED
+	(director_id int,
+	 director_name varchar(50),
+	  movie_add int);
+
+create trigger addMOVIE 
+after INSERT 
+on MOVIE_DIRECTED
+for each row
+update DIRECTOR set NO_OF_MOVIES = NO_OF_MOVIES + 1 
+where director_id = new.director_id;
+
+insert into MOVIE_DIRECTED values(203,'S S RAJAMOULI',01);
+
+-- GIVING ACCESS TO USER MOVIEINDUSTRY ON RETRIEVING THE DATA FROM FILM DATABASE --
+
+CREATE USER 'MOVIEINDUSTRY'@'LOCALHOST' IDENTIFIED BY 'MOVIE1122';
+
+grant SELECT ON MOVIE.MOVIES TO 'MOVIEINDUSTRY'@'LOCALHOST';
+
+SHOW GRANTS FOR 'MOVIEINDUSTRY'@'LOCALHOST';
+
+-- REMOVING ACCESS FROM THE USER 
+
+REVOKE SELECT ON MOVIE.MOVIES FROM 'MOVIEINDUSTRY'@'LOCALHOST';
+
+SHOW GRANTS FOR 'MOVIEINDUSTRY'@'LOCALHOST';
